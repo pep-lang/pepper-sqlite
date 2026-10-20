@@ -12,9 +12,13 @@
 ##   `begin`/`commit`/`rollback` and `transaction`
 ## - `Statement`: a prepared statement: `bind`, `step`, the `column_`
 ##   readers, `read<T>`, `reset`, `finalize`
+## - `Pool`, `PooledConnection`: connections that threads share
 ## - `Value`: one value of any of SQLite's storage classes
 ## - `SqliteError`, `SqliteResult<T>`: errors
 ## - `OPEN_READ_ONLY` and the other `OPEN_` flags, `version`
+##
+## A `Database` belongs to one thread at a time; threads share a `Pool`, or
+## open a connection each.
 ##
 ## @example
 ##     import sqlite;
@@ -41,11 +45,14 @@
 
 import "database";
 import "error";
+import "pool";
 import "statement";
 import "value";
 
 export Database;
 export Statement;
+export Pool;
+export PooledConnection;
 export Value;
 export SqliteError;
 export SqliteResult;
@@ -54,4 +61,6 @@ export OPEN_READ_WRITE;
 export OPEN_CREATE;
 export OPEN_URI;
 export OPEN_MEMORY;
+export OPEN_NO_MUTEX;
+export OPEN_FULL_MUTEX;
 export version;
