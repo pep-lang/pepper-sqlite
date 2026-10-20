@@ -36,6 +36,7 @@ extern int sqlite3_changes(void* db);
 extern long sqlite3_last_insert_rowid(void* db);
 extern int sqlite3_get_autocommit(void* db);
 extern int sqlite3_busy_timeout(void* db, int milliseconds);
+extern int sqlite3_threadsafe();
 
 extern int sqlite3_prepare_v2(void* db, char* sql, int size, void** statement, char** tail);
 extern int sqlite3_step(void* statement);

@@ -32,6 +32,8 @@ One module, **`sqlite`**:
 - **`begin`**, **`commit`** and **`rollback`** run transactions by hand;
   **`transaction<T>(body)`** commits when `body` returns Ok and rolls back
   when it returns an error.
+- **`Pool.open(path, size)`** opens connections that any thread may use, one
+  thread at a time each (see [Threads](#threads)).
 
 ```pepper
 import sqlite;
@@ -66,6 +68,57 @@ main(): int {
 }
 ```
 
+## Threads
+
+A `Database` and its `Statement`s belong to one thread at a time, and the
+compiler holds you to it:
+
+- A thread's closure cannot capture a `Database`: it is not thread-safe.
+- `Channel.send(move(db))` hands a whole connection to another thread, and is
+  rejected while a `Statement` prepared on it still exists.
+
+For several threads on one database, open a connection per thread, or share
+a **`Pool`**, which is `[Shared]`:
+
+```pepper
+import async;
+import sqlite;
+
+main(): int {
+    var pool = sqlite.Pool.open("app.db", 4).value();
+    var workers = Array<async.Thread>();
+    for (var i in 0..8) {
+        workers.append(async.Thread.spawn(() => {
+            with (var lease = pool.connection()) {   # waits for a free connection
+                with (var db = lease.lock()) {
+                    db.execute("INSERT INTO hits VALUES (1)").value();
+                }
+            }   # the connection goes back to the pool
+        }));
+    }
+    for (var worker in workers) {
+        worker.join();
+    }
+    return 0;
+}
+```
+
+- `pool.connection()` lends one connection to one thread. The lease can only
+  be the scope of a `with` block, so the connection always goes back.
+- Each connection sits in an `async.Mutex`, so the compiler checks the inner
+  block as it checks any lock: a `Statement` or row made from `db` cannot
+  outlive it.
+- `Pool.open` gives every connection a busy timeout (5 seconds by default),
+  so a write waits for another connection's lock instead of failing with
+  `SQLITE_BUSY`. It also switches the database to the write-ahead log, so
+  readers do not wait for a writer.
+- A read-then-write that must not interleave with other threads runs in
+  `BEGIN IMMEDIATE` ... `COMMIT`.
+- `OPEN_NO_MUTEX` and `OPEN_FULL_MUTEX` choose SQLite's own locking per
+  connection. The pool's lease already keeps each connection to one thread.
+- The bindings' calls block their thread. Inside `async.run`, they hold up
+  that thread's other tasks.
+
 ## Which SQLite
 
 The package links the system's SQLite rather than building its own copy:
@@ -84,7 +137,6 @@ The package links the system's SQLite rather than building its own copy:
   I/O APIs.
 - Transactions do not nest (`begin` inside a transaction fails); use
   `SAVEPOINT` through `execute` for nested work.
-- A connection and its statements belong to one thread at a time.
 - Text and blobs of 2 GiB or more fail to bind (`SQLITE_TOOBIG`).
 - `int` columns keep the low 32 bits of a larger integer; read them with
   `column_long`.
@@ -118,7 +170,10 @@ tests/run.sh path/to/pepper
 runs the `[Test]` functions in `tests/` with `pepper test`: opening,
 closing and errors (`database_test.pep`), binding and reading every type,
 `NULL`, names and misuse (`statement_test.pep`), decoding rows into structs
-(`read_test.pep`), and transactions (`transaction_test.pep`).
+(`read_test.pep`), transactions (`transaction_test.pep`), and pools and
+connections on many threads (`thread_test.pep`). It then builds each program
+in `tests/rejected/`, which breaks a threading rule, and checks that the
+compiler rejects it with the error that its `# expect:` line names.
 
 ## Releasing
 

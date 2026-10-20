@@ -15,6 +15,12 @@ export const OPEN_CREATE = 0x4;
 export const OPEN_URI = 0x40;
 ## Opens an in-memory database, whatever the path says.
 export const OPEN_MEMORY = 0x80;
+## Leaves out the connection's own lock: a connection used by one thread
+## at a time needs none. Ignored when SQLite was built single-threaded.
+export const OPEN_NO_MUTEX = 0x8000;
+## Serializes every call on the connection with its own lock, whatever
+## SQLite's default threading mode is.
+export const OPEN_FULL_MUTEX = 0x10000;
 
 ## A connection to an SQLite database.
 ##
@@ -26,7 +32,8 @@ export const OPEN_MEMORY = 0x80;
 ##
 ## The connection is closed when the last reference to it, and to every
 ## statement prepared on it, goes away, or earlier with `close()`. It
-## belongs to one thread at a time.
+## belongs to one thread at a time: hand it to another thread whole with
+## `Channel.send(move(db))`, or share connections through a `Pool`.
 ##
 ## @example
 ##     import sqlite;
