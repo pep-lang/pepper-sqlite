@@ -1,6 +1,6 @@
 [package]
-name = "mypkg"
+name = "sqlite"
 version = "0.1.0"
-description = "One line saying what the package does"
+description = "SQLite bindings: prepared statements, typed rows, struct decoding and transactions"
 license = "Apache-2.0"
-repository = "https://github.com/OWNER/pepper-mypkg"
+repository = "https://github.com/pep-lang/pepper-sqlite"
