@@ -30,16 +30,27 @@ jobs:
 
       - name: Install Pepper (Unix)
         if: runner.os != 'Windows'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           curl -fsSL https://raw.githubusercontent.com/pep-lang/pepper/main/scripts/install.sh | sh
           echo "$HOME/.pepper/bin" >> "$GITHUB_PATH"
 
       - name: Install Pepper (Windows)
         if: runner.os == 'Windows'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
           irm https://raw.githubusercontent.com/pep-lang/pepper/main/scripts/install.ps1 | iex
           "$env:LOCALAPPDATA\pepper\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      # macOS links the SDK's libsqlite3 and Windows its own winsqlite3;
+      # Linux needs the development package for libsqlite3.so.
+      - name: Install SQLite (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
 
       - name: Test
         shell: bash
