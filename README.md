@@ -15,7 +15,8 @@ One module, **`sqlite`**:
   to its statements, goes away.
 - **`execute(sql)`** runs SQL that may hold several statements;
   **`execute(sql, parameters)`** runs one statement with parameters and
-  returns how many rows it changed.
+  returns how many rows it inserted, changed or deleted (0 for a `SELECT`,
+  DDL or any other statement that writes no rows).
 - **`prepare(sql)`** makes a **`Statement`**: **`bind`** a `long`,
   `double`, `String`, `u8[]` blob or `Value` by index (from 1) or by name
   (`":id"`), **`bind_null`**, then **`step()`** until it returns false.
