@@ -151,15 +151,21 @@ export struct Database {
     ##
     ## @param sql one SQL statement
     ## @param parameters one value per parameter
-    ## @returns the number of rows it inserted, changed or deleted, or the
-    ##   error; for any other statement, the count of the last write before
-    ##   it, as SQLite's `changes()` reports
+    ## @returns the number of rows it inserted, changed or deleted (0 for
+    ##   any other statement, such as a `SELECT` or `CREATE TABLE`), or the
+    ##   error
     ## @panics if the database is closed
     execute(sql: String, parameters: Value[]): SqliteResult<long> {
         var statement = prepare(sql)?;
         statement.bind_all(parameters)?;
+        # changes() keeps the last write's count through any other statement;
+        # total_changes() moves only when this one writes.
+        var before = sqlite3_total_changes(_raw());
         while (statement.step()?) {}
         statement.finalize();
+        if (sqlite3_total_changes(_raw()) == before) {
+            return SqliteResult<long>.ok(0);
+        }
         return SqliteResult<long>.ok(changes());
     }
 

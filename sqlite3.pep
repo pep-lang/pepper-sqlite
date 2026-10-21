@@ -33,6 +33,7 @@ extern int sqlite3_extended_result_codes(void* db, int on);
 extern int sqlite3_exec(void* db, char* sql, void* callback, void* argument, char** error);
 extern void sqlite3_free(void* p);
 extern int sqlite3_changes(void* db);
+extern int sqlite3_total_changes(void* db);
 extern long sqlite3_last_insert_rowid(void* db);
 extern int sqlite3_get_autocommit(void* db);
 extern int sqlite3_busy_timeout(void* db, int milliseconds);
