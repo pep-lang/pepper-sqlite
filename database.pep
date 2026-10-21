@@ -160,13 +160,14 @@ export struct Database {
         statement.bind_all(parameters)?;
         # changes() keeps the last write's count through any other statement;
         # total_changes() moves only when this one writes.
-        var before = sqlite3_total_changes(_raw());
+        var db = _raw();
+        var before = sqlite3_total_changes(db);
         while (statement.step()?) {}
         statement.finalize();
-        if (sqlite3_total_changes(_raw()) == before) {
+        if (sqlite3_total_changes(db) == before) {
             return SqliteResult<long>.ok(0);
         }
-        return SqliteResult<long>.ok(changes());
+        return SqliteResult<long>.ok(sqlite3_changes(db) as long);
     }
 
     ## Compiles the first statement in `sql`.

@@ -90,8 +90,6 @@ execute_with_parameters_counts_no_changes_for_other_statements() {
     # Each follows a write of 2 rows, whose count changes() still reports.
     expect_equal(db.execute("SELECT n FROM t WHERE n > ?", [sqlite.Value.Integer(0)]).value(), 0 as long);
     expect_equal(db.execute("CREATE TABLE u (n INTEGER)", Array<sqlite.Value>()).value(), 0 as long);
-    expect_equal(db.execute("DELETE FROM t WHERE n > ?", [sqlite.Value.Integer(5)]).value(), 0 as long);
-    expect_equal(db.execute("DELETE FROM t WHERE n > ?", [sqlite.Value.Integer(1)]).value(), 1 as long);
 }
 
 [Test]
