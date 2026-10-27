@@ -18,6 +18,10 @@ defines = [
     "SQLITE_OMIT_LOAD_EXTENSION",
     "SQLITE_OMIT_DEPRECATED",
     "SQLITE_DEFAULT_MEMSTATUS=0",
+    # synchronous=NORMAL in WAL mode, as SQLite advises: a commit does not
+    # wait for an fsync, which on Windows kept Pool writers past their
+    # busy timeout.
+    "SQLITE_DEFAULT_WAL_SYNCHRONOUS=1",
     "SQLITE_ENABLE_FTS5",
     "SQLITE_ENABLE_RTREE",
     "SQLITE_ENABLE_MATH_FUNCTIONS",

@@ -132,6 +132,11 @@ every system and for every `--target`, so nothing needs installing.
   `SQLITE_OMIT_LOAD_EXTENSION`, `SQLITE_OMIT_DEPRECATED` and
   `SQLITE_DEFAULT_MEMSTATUS=0`, and has FTS5, R*Tree and the SQL math
   functions.
+- A database in write-ahead-log mode (as `Pool` sets) defaults to
+  `PRAGMA synchronous=NORMAL` (`SQLITE_DEFAULT_WAL_SYNCHRONOUS=1`): a
+  commit does not wait for the disk, so a power loss can undo the last
+  commits but never corrupts the file. Run `PRAGMA synchronous=FULL` on a
+  connection that needs every commit on disk.
 - The first build compiles `sqlite3.c`, which takes a while (about 25
   seconds on a desktop); the object is kept in the project's `.pep/build/`,
   so later builds reuse it.
