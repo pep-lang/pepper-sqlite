@@ -122,15 +122,29 @@ main(): int {
 
 ## Which SQLite
 
-The package links the system's SQLite rather than building its own copy:
+The package bundles SQLite **3.54.1**: the amalgamation (`sqlite3.c` and
+`sqlite3.h`, unchanged from sqlite.org) in `native/sqlite/`, whose
+`VERSION` file records the download and its hashes. The `[native]` table
+in `pep.toml` compiles it into every program that uses the package, on
+every system and for every `--target`, so nothing needs installing.
 
-- **Linux:** `libsqlite3.so`, from the distribution's development package
-  (`apt install libsqlite3-dev`, `dnf install sqlite-devel`).
-- **macOS:** `libsqlite3.dylib`, which the macOS SDK provides.
-- **Windows:** `winsqlite3.dll`, which Windows 10 and later ship, through
-  `winsqlite3.lib` from the Windows SDK that Pepper already links with.
+- It is built with `SQLITE_THREADSAFE=1` (serialized, as `Pool` needs),
+  `SQLITE_OMIT_LOAD_EXTENSION`, `SQLITE_OMIT_DEPRECATED` and
+  `SQLITE_DEFAULT_MEMSTATUS=0`, and has FTS5, R*Tree and the SQL math
+  functions.
+- A database in write-ahead-log mode (as `Pool` sets) defaults to
+  `PRAGMA synchronous=NORMAL` (`SQLITE_DEFAULT_WAL_SYNCHRONOUS=1`): a
+  commit does not wait for the disk, so a power loss can undo the last
+  commits but never corrupts the file. Run `PRAGMA synchronous=FULL` on a
+  connection that needs every commit on disk.
+- The first build compiles `sqlite3.c`, which takes a while (about 25
+  seconds on a desktop); the object is kept in the project's `.pep/build/`,
+  so later builds reuse it.
+- `sqlite.version()` says which version the program runs against.
 
-`sqlite.version()` says which version the program runs against.
+To move to a newer SQLite, replace the two files with those of the new
+amalgamation, update `native/sqlite/VERSION`, and the version that
+`tests/database_test.pep` expects.
 
 ## Limits
 
@@ -159,8 +173,9 @@ which writes
 sqlite = { github = "pep-lang/pepper-sqlite" }
 ```
 
-Without a project, put a folder named `sqlite` that holds (or links to)
-this repository on the import path: `pepper build -I packages main.pep`.
+It needs Pepper 0.11.0 or later (`minimum_toolchain`), which builds
+`[native]` C. Use it as a dependency of a project: a folder passed with
+`-I` is only searched for modules, so its SQLite would not be built.
 
 ## Tests
 
@@ -168,8 +183,9 @@ this repository on the import path: `pepper build -I packages main.pep`.
 tests/run.sh path/to/pepper
 ```
 
-runs the `[Test]` functions in `tests/` with `pepper test`: opening,
-closing and errors (`database_test.pep`), binding and reading every type,
+runs the `[Test]` functions in `tests/` with `pepper test`: the bundled
+SQLite's version and features, opening, closing and errors
+(`database_test.pep`), binding and reading every type,
 `NULL`, names and misuse (`statement_test.pep`), decoding rows into structs
 (`read_test.pep`), transactions (`transaction_test.pep`), and pools and
 connections on many threads (`thread_test.pep`). It then builds each program
@@ -187,5 +203,5 @@ package update` find versions by their tags.
 
 ## License
 
-Apache-2.0; see [LICENSE](LICENSE). SQLite itself is in the public domain
-and is not part of this repository.
+Apache-2.0; see [LICENSE](LICENSE). The bundled SQLite, in
+`native/sqlite/`, is in the public domain.

@@ -16,7 +16,7 @@ export const OPEN_URI = 0x40;
 ## Opens an in-memory database, whatever the path says.
 export const OPEN_MEMORY = 0x80;
 ## Leaves out the connection's own lock: a connection used by one thread
-## at a time needs none. Ignored when SQLite was built single-threaded.
+## at a time needs none.
 export const OPEN_NO_MUTEX = 0x8000;
 ## Serializes every call on the connection with its own lock, whatever
 ## SQLite's default threading mode is.
@@ -319,7 +319,7 @@ export struct Database {
 
 ## Returns the version of the SQLite library the program runs against.
 ##
-## @returns the version, such as `3.45.1`
+## @returns the version, such as `3.54.1`
 export version(): String {
     return String(sqlite3_libversion());
 }

@@ -4,3 +4,28 @@ version = "1.1.1"
 description = "SQLite bindings: prepared statements, typed rows, struct decoding and transactions"
 license = "Apache-2.0"
 repository = "https://github.com/pep-lang/pepper-sqlite"
+# 0.11 added `[native]`, which builds the bundled SQLite.
+minimum_toolchain = "0.11.0"
+
+# The SQLite amalgamation, built into every program that uses the package
+# (native/sqlite/VERSION says which release). Serialized threading, as Pool
+# needs; no loadable extensions; FTS5, R*Tree and the math functions, as
+# the usual system builds have.
+[native]
+sources = ["native/sqlite/sqlite3.c"]
+defines = [
+    "SQLITE_THREADSAFE=1",
+    "SQLITE_OMIT_LOAD_EXTENSION",
+    "SQLITE_OMIT_DEPRECATED",
+    "SQLITE_DEFAULT_MEMSTATUS=0",
+    # synchronous=NORMAL in WAL mode, as SQLite advises: a commit does not
+    # wait for an fsync, which on Windows kept Pool writers past their
+    # busy timeout.
+    "SQLITE_DEFAULT_WAL_SYNCHRONOUS=1",
+    "SQLITE_ENABLE_FTS5",
+    "SQLITE_ENABLE_RTREE",
+    "SQLITE_ENABLE_MATH_FUNCTIONS",
+]
+
+[target.'OS(Linux)'.native]
+link = ["m"]
