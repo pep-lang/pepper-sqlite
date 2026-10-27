@@ -75,8 +75,7 @@ export struct Pool {
     ## @param write_ahead_log whether to switch the database to the
     ##   write-ahead log, so readers do not wait for a writer; a read-only
     ##   pool leaves the file as it is
-    ## @returns the pool, or the first error; `SQLITE_MISUSE` (21) when the
-    ##   SQLite library was built without thread support
+    ## @returns the pool, or the first error
     ## @panics if `size` is 0
     static open(
         path: String,
@@ -86,11 +85,6 @@ export struct Pool {
         write_ahead_log: bool = true
     ): SqliteResult<Pool> {
         assert(size > 0, "sqlite: a pool needs at least one connection");
-        if (sqlite3_threadsafe() == 0) {
-            return SqliteResult<Pool>.err(
-                SqliteError(SQLITE_MISUSE, "this SQLite library was built without thread support")
-            );
-        }
         var idle = async.Channel<async.Mutex<Database>>();
         for (var i in 0..size) {
             # Not `var db = Database.open(path, flags)?`: move(db) below
