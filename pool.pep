@@ -93,7 +93,13 @@ export struct Pool {
         }
         var idle = async.Channel<async.Mutex<Database>>();
         for (var i in 0..size) {
-            var db = Database.open(path, flags)?;
+            # Not `var db = Database.open(path, flags)?`: move(db) below
+            # rejects a value `?` unwrapped (pep-lang/pepper#266).
+            var opened = Database.open(path, flags);
+            if (opened.is_err()) {
+                return SqliteResult<Pool>.err(opened.error());
+            }
+            var db = _value_of(move(opened));
             db.set_busy_timeout(busy_timeout);
             # The journal mode is the file's, so one connection sets it; a
             # read-only connection cannot.
@@ -170,4 +176,10 @@ export struct PooledConnection {
             _idle.send(_connection);
         }
     }
+}
+
+# The connection `opened` holds, as a value nothing else references, which
+# move() hands over (pep-lang/pepper#266).
+_value_of(opened: SqliteResult<Database>): Database {
+    return opened.value();
 }

@@ -2,9 +2,8 @@
 ## parameters, read typed rows or decode them into structs, and run
 ## transactions.
 ##
-## Bring it in with `import sqlite`. It links the system's SQLite:
-## `libsqlite3` on Linux (`apt install libsqlite3-dev`) and macOS, and
-## `winsqlite3`, part of Windows 10 and later, on Windows. Every call that
+## Bring it in with `import sqlite`. It bundles SQLite, which the build
+## compiles into the program, so nothing needs installing. Every call that
 ## can fail returns a `SqliteResult<T>`, whose error holds SQLite's result
 ## code and message.
 ##

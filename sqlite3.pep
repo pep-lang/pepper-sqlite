@@ -3,22 +3,10 @@
 ## C's types: `sqlite3*` and `sqlite3_stmt*` are `void*`, `sqlite3_int64`
 ## is `long`.
 ##
-## Which library is linked, per platform:
-##
-## - **Linux:** `libsqlite3.so` (`apt install libsqlite3-dev`).
-## - **macOS:** `libsqlite3.dylib`, which the SDK provides.
-## - **Windows:** `winsqlite3.dll`, which Windows 10 and later ship in
-##   `System32`, through `winsqlite3.lib` from the Windows SDK.
+## The functions come from the SQLite the package bundles,
+## `native/sqlite/sqlite3.c`, which `[native]` in `pep.toml` compiles into
+## every program that imports the module.
 
-# The [Link] on sqlite3_libversion links the library for every program that
-# imports the module.
-
-[Target(OS(Windows))]
-[Link("winsqlite3")]
-extern char* sqlite3_libversion();
-
-[Target(!OS(Windows))]
-[Link("sqlite3")]
 extern char* sqlite3_libversion();
 
 extern void* malloc(ulong size);

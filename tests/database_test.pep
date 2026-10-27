@@ -7,7 +7,18 @@ _memory(): sqlite.Database {
 
 [Test]
 reports_the_library_version() {
-    expect_true(sqlite.version().starts_with("3."));
+    # The bundled copy (native/sqlite/VERSION), not a system library.
+    expect_equal(sqlite.version(), "3.54.1");
+}
+
+[Test]
+has_the_features_pep_toml_enables() {
+    var db = _memory();
+    db.execute("CREATE VIRTUAL TABLE notes USING fts5(body)").value();
+    db.execute("CREATE VIRTUAL TABLE boxes USING rtree(id, min_x, max_x)").value();
+    var rows = db.prepare("SELECT sqrt(16)").value();
+    expect_true(rows.step().value());
+    expect_equal(rows.column_double(0).value(), 4.0);
 }
 
 [Test]

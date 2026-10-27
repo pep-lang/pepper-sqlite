@@ -1,0 +1,2 @@
+# The vendored SQLite stays byte for byte as downloaded, so its hash checks.
+native/sqlite/** -text linguist-vendored

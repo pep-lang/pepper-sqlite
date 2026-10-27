@@ -319,7 +319,7 @@ export struct Database {
 
 ## Returns the version of the SQLite library the program runs against.
 ##
-## @returns the version, such as `3.45.1`
+## @returns the version, such as `3.54.1`
 export version(): String {
     return String(sqlite3_libversion());
 }
