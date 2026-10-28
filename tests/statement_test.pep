@@ -76,13 +76,11 @@ empty_text_and_blobs_are_not_null() {
 text_with_nul_bytes_round_trips() {
     var db = _table();
     var insert = db.prepare("INSERT INTO t (s) VALUES (?)").value();
-    var text = "a\0b";
-    insert.bind(1, text).value();
+    insert.bind(1, "a\0b").value();
     insert.step().value();
     var query = db.prepare("SELECT s, length(CAST(s AS BLOB)) FROM t").value();
     query.step().value();
-    # Against `text`: a literal compares only up to its NUL.
-    expect_equal(query.column_text(0).value(), text);
+    expect_equal(query.column_text(0).value(), "a\0b");
     expect_equal(query.column_long(1).value(), 3 as long);
 }
 

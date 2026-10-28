@@ -308,10 +308,9 @@ export struct Database {
             }
             return result;
         }
-        var committed = commit();
-        if (committed.is_err()) {
+        if (commit() is Err(e)) {
             rollback();
-            return SqliteResult<T>.err(committed.error());
+            return SqliteResult<T>.err(e);
         }
         return result;
     }
