@@ -156,15 +156,9 @@ export struct Statement {
         if (bytes.count == 0) {
             return _check(_db(), sqlite3_bind_zeroblob(_raw(), index, 0));
         }
-        # The runtime gives no pointer to an array's elements, so the bytes go
-        # through a C buffer.
-        __ptr<u8> buffer = malloc(bytes.count) as __ptr<u8>;
-        for (var i in 0..bytes.count) {
-            buffer[i] = bytes[i];
-        }
-        var code = sqlite3_bind_blob(_raw(), index, buffer as __ptr<void>, bytes.count as int, _transient());
-        free(buffer as __ptr<void>);
-        return _check(_db(), code);
+        return _check(
+            _db(), sqlite3_bind_blob(_raw(), index, bytes.data() as __ptr<void>, bytes.count as int, _transient())
+        );
     }
 
     ## Binds any `Value` to the parameter at `index`.
@@ -175,11 +169,11 @@ export struct Statement {
     ## @panics if the statement is finalized
     bind(index: int, value: Value): SqliteResult<void> {
         return match (value) {
-            Null => this.bind_null(index),
-            Integer(n) => this.bind(index, n),
-            Real(x) => this.bind(index, x),
-            Text(text) => this.bind(index, text),
-            Blob(bytes) => this.bind(index, bytes),
+            Null => bind_null(index),
+            Integer(n) => bind(index, n),
+            Real(x) => bind(index, x),
+            Text(text) => bind(index, text),
+            Blob(bytes) => bind(index, bytes),
         };
     }
 
@@ -199,7 +193,7 @@ export struct Statement {
     ## @returns nothing, or the error (`SQLITE_RANGE` for an unknown name)
     ## @panics if the statement is finalized
     bind(name: String, value: long): SqliteResult<void> {
-        return this.bind(_index(name)?, value);
+        return bind(_index(name)?, value);
     }
 
     ## Binds a floating-point number to the parameter named `name`.
@@ -209,7 +203,7 @@ export struct Statement {
     ## @returns nothing, or the error (`SQLITE_RANGE` for an unknown name)
     ## @panics if the statement is finalized
     bind(name: String, value: double): SqliteResult<void> {
-        return this.bind(_index(name)?, value);
+        return bind(_index(name)?, value);
     }
 
     ## Binds text to the parameter named `name`.
@@ -219,7 +213,7 @@ export struct Statement {
     ## @returns nothing, or the error (`SQLITE_RANGE` for an unknown name)
     ## @panics if the statement is finalized
     bind(name: String, value: String): SqliteResult<void> {
-        return this.bind(_index(name)?, value);
+        return bind(_index(name)?, value);
     }
 
     ## Binds a blob to the parameter named `name`.
@@ -229,7 +223,7 @@ export struct Statement {
     ## @returns nothing, or the error (`SQLITE_RANGE` for an unknown name)
     ## @panics if the statement is finalized
     bind(name: String, bytes: u8[]): SqliteResult<void> {
-        return this.bind(_index(name)?, bytes);
+        return bind(_index(name)?, bytes);
     }
 
     ## Binds any `Value` to the parameter named `name`.
@@ -239,7 +233,7 @@ export struct Statement {
     ## @returns nothing, or the error (`SQLITE_RANGE` for an unknown name)
     ## @panics if the statement is finalized
     bind(name: String, value: Value): SqliteResult<void> {
-        return this.bind(_index(name)?, value);
+        return bind(_index(name)?, value);
     }
 
     ## Binds `NULL` to the parameter named `name`.
@@ -248,7 +242,7 @@ export struct Statement {
     ## @returns nothing, or the error (`SQLITE_RANGE` for an unknown name)
     ## @panics if the statement is finalized
     bind_null(name: String): SqliteResult<void> {
-        return this.bind_null(_index(name)?);
+        return bind_null(_index(name)?);
     }
 
     ## Binds `values` to the parameters 1, 2, ... in order.
@@ -260,7 +254,7 @@ export struct Statement {
     bind_all(values: Value[]): SqliteResult<void> {
         for (var i in 0..values.count) {
             var value = values[i];
-            this.bind((i + 1) as int, value)?;
+            bind((i + 1) as int, value)?;
         }
         return SqliteResult<void>.ok();
     }
@@ -409,10 +403,7 @@ export struct Statement {
         __ptr<u8> data = sqlite3_column_blob(_raw(), index) as __ptr<u8>;
         var size = sqlite3_column_bytes(_raw(), index) as ulong;
         var bytes = Array<u8>();
-        bytes.reserve(size);
-        for (var i in 0..size) {
-            bytes.append(data[i]);
-        }
+        bytes.append_from(data, size);
         return Optional<u8[]>.Value(bytes);
     }
 
@@ -462,8 +453,8 @@ export struct Statement {
             object[column_name(i)] = _json_of(column(i));
         }
         var decoded = json.from_json<T>(object);
-        if (decoded.is_err()) {
-            return SqliteResult<T>.err(SqliteError(SQLITE_MISMATCH, decoded.error().message));
+        if (decoded is Err(e)) {
+            return SqliteResult<T>.err(SqliteError(SQLITE_MISMATCH, e.message));
         }
         return SqliteResult<T>.ok(decoded.value());
     }
