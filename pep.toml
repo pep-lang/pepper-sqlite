@@ -4,8 +4,9 @@ version = "1.1.1"
 description = "SQLite bindings: prepared statements, typed rows, struct decoding and transactions"
 license = "Apache-2.0"
 repository = "https://github.com/pep-lang/pepper-sqlite"
-# 0.11 added `[native]`, which builds the bundled SQLite.
-minimum_toolchain = "0.11.0"
+# 0.11 added `[native]`, which builds the bundled SQLite; 0.11.1 lets
+# `Pool.open` move a value `?` unwrapped (pep-lang/pepper#266).
+minimum_toolchain = "0.11.1"
 
 # The SQLite amalgamation, built into every program that uses the package
 # (native/sqlite/VERSION says which release). Serialized threading, as Pool
