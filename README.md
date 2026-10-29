@@ -173,7 +173,7 @@ which writes
 sqlite = { github = "pep-lang/pepper-sqlite" }
 ```
 
-It needs Pepper 0.11.0 or later (`minimum_toolchain`), which builds
+It needs Pepper 0.11.1 or later (`minimum_toolchain`), which builds
 `[native]` C. Use it as a dependency of a project: a folder passed with
 `-I` is only searched for modules, so its SQLite would not be built.
 
